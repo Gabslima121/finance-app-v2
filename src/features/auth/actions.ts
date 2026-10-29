@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { ApiError } from '@/lib/api/client';
 import { authApi } from './api';
+import { safeNextPath } from './safe-next-path';
 import { loginInputSchema, type LoginInput } from './schemas';
 
 export type LoginState =
@@ -66,6 +67,6 @@ export async function loginAction(
     });
   }
 
-  // shortcut: sempre para o início; a volta para a página pedida (?next=) é a T3.
-  redirect('/');
+  // O campo vem do navegador: só caminho interno passa (anti open redirect).
+  redirect(safeNextPath(formData.get('next')));
 }

@@ -12,10 +12,11 @@ vi.mock('next/navigation', () => ({
   redirect: (path: string) => redirectMock(path),
 }));
 
-function form(email: string, password: string) {
+function form(email: string, password: string, next?: string) {
   const data = new FormData();
   data.set('email', email);
   data.set('password', password);
+  if (next !== undefined) data.set('next', next);
   return data;
 }
 
@@ -64,6 +65,28 @@ describe('loginAction', () => {
       'rrr',
       expect.objectContaining({ path: '/' }),
     );
+    expect(redirectMock).toHaveBeenCalledWith('/');
+  });
+
+  it('com next interno volta para a página pedida', async () => {
+    mockApi(200);
+
+    await loginAction(
+      idle,
+      form('gabriel@exemplo.com', 'senha', '/transacoes'),
+    );
+
+    expect(redirectMock).toHaveBeenCalledWith('/transacoes');
+  });
+
+  it('com next para outro site vai para o início', async () => {
+    mockApi(200);
+
+    await loginAction(
+      idle,
+      form('gabriel@exemplo.com', 'senha', 'https://site-malicioso.com'),
+    );
+
     expect(redirectMock).toHaveBeenCalledWith('/');
   });
 

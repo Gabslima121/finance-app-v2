@@ -4,6 +4,8 @@ import { useActionState, useEffect, useRef } from 'react';
 import { loginAction, type LoginState } from '../actions';
 
 type LoginFormProps = {
+  // Página pedida antes do login (?next=). A action valida antes de usar.
+  next?: string;
   // Injetável para o teste de componente; o padrão é a Server Action real.
   action?: typeof loginAction;
 };
@@ -11,7 +13,7 @@ type LoginFormProps = {
 const INPUT_CLASS =
   'w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none aria-[invalid=true]:border-red-600';
 
-export function LoginForm({ action = loginAction }: LoginFormProps) {
+export function LoginForm({ next, action = loginAction }: LoginFormProps) {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(
     action,
     { status: 'idle' },
@@ -42,6 +44,7 @@ export function LoginForm({ action = loginAction }: LoginFormProps) {
 
   return (
     <form action={formAction} noValidate className="space-y-4">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       {/* Fica sempre no DOM: leitores de tela só anunciam mudanças em região já existente. */}
       <div role="alert" aria-live="assertive" className="empty:hidden">
         {state.status === 'error' && state.message ? (

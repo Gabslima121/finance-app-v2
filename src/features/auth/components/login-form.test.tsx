@@ -59,6 +59,16 @@ describe('LoginForm', () => {
     expect(email).toHaveFocus();
   });
 
+  it('envia o next recebido junto com o formulário', async () => {
+    const action = vi.fn().mockResolvedValue({ status: 'idle' });
+    render(<LoginForm next="/transacoes" action={action} />);
+
+    await submit('gabriel@exemplo.com', 'senha');
+
+    const formData: FormData = action.mock.calls[0][1];
+    expect(formData.get('next')).toBe('/transacoes');
+  });
+
   it('desabilita o botão e mostra "Entrando..." enquanto envia', async () => {
     const action = vi.fn(() => new Promise<LoginState>(() => {}));
     render(<LoginForm action={action} />);

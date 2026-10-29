@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loginAction } from './actions';
+import { loginAction, logoutAction } from './actions';
 
 const cookieSet = vi.fn();
+const cookieDelete = vi.fn();
+let cookieValues: Record<string, string> = {};
 vi.mock('next/headers', () => ({
-  cookies: async () => ({ set: cookieSet }),
+  cookies: async () => ({
+    set: cookieSet,
+    delete: cookieDelete,
+    get: (name: string) =>
+      name in cookieValues ? { name, value: cookieValues[name] } : undefined,
+  }),
 }));
 
 // O redirect real lança um erro especial do Next; aqui ele só é registrado.
@@ -155,5 +162,50 @@ describe('loginAction', () => {
       values: { email: 'nao-e-email' },
     });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('logoutAction', () => {
+  beforeEach(() => {
+    cookieDelete.mockClear();
+    redirectMock.mockClear();
+    cookieValues = {};
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('revoga o refresh na API, apaga os cookies e volta ao login', async () => {
+    cookieValues = { access_token: 'aaa', refresh_token: 'rrr' };
+    const fetchMock = mockApi(204);
+
+    await logoutAction();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url.toString()).toBe('http://api.test/auth/logout');
+    expect(init.headers.Cookie).toBe('refresh_token=rrr');
+    expect(cookieDelete).toHaveBeenCalledWith('access_token');
+    expect(cookieDelete).toHaveBeenCalledWith('refresh_token');
+    expect(redirectMock).toHaveBeenCalledWith('/login');
+  });
+
+  it('com a API fora sai do site do mesmo jeito', async () => {
+    cookieValues = { refresh_token: 'rrr' };
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch')));
+
+    await logoutAction();
+
+    expect(cookieDelete).toHaveBeenCalledWith('refresh_token');
+    expect(redirectMock).toHaveBeenCalledWith('/login');
+  });
+
+  it('sem cookie de refresh não chama a API', async () => {
+    const fetchMock = mockApi(204);
+
+    await logoutAction();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(redirectMock).toHaveBeenCalledWith('/login');
   });
 });

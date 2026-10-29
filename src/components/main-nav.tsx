@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { logoutAction } from '@/features/auth';
 
 const ITEMS = [
   { href: '/', label: 'Início' },
@@ -35,6 +36,18 @@ export function MainNav() {
             </li>
           );
         })}
+        <li className="flex-1">
+          {/* Form + Server Action: funciona antes do JS carregar e o POST
+              não pode ser disparado por um simples link de outro site. */}
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="block w-full px-4 py-3 text-center text-sm text-zinc-600 md:text-left"
+            >
+              Sair
+            </button>
+          </form>
+        </li>
       </ul>
     </nav>
   );

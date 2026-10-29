@@ -3,7 +3,7 @@ import {
   isAccessTokenExpiring,
   refreshSession,
   SESSION_COOKIE_OPTIONS,
-} from '@/features/auth';
+} from '@/features/auth/server';
 
 // Checagem otimista: só olha os cookies de sessão; quem valida o token é a
 // API. Com o access expirado (ou quase), renova pelo refresh antes da página

@@ -64,3 +64,23 @@ export async function loginAction(
   // O campo vem do navegador: só caminho interno passa (anti open redirect).
   redirect(safeNextPath(formData.get('next')));
 }
+
+export async function logoutAction(): Promise<void> {
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+
+  if (refreshToken) {
+    try {
+      await authApi.logout(refreshToken);
+    } catch {
+      // API fora: o site sai do mesmo jeito. O refresh continua válido na API
+      // até expirar, mas ninguém mais tem o cookie dele.
+    }
+  }
+
+  // Apagar cookie numa Server Action também limpa o cache do roteador no
+  // navegador: o "voltar" não reaproveita páginas já carregadas.
+  cookieStore.delete('access_token');
+  cookieStore.delete('refresh_token');
+  redirect('/login');
+}

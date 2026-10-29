@@ -24,6 +24,14 @@ class AuthApi {
     });
     return parseSessionCookies(response.headers.getSetCookie());
   }
+
+  // Revoga o refresh token na API. Idempotente: token já inválido também dá 204.
+  async logout(refreshToken: string): Promise<void> {
+    await apiRequest('/auth/logout', {
+      method: 'POST',
+      headers: { Cookie: `refresh_token=${refreshToken}` },
+    });
+  }
 }
 
 export const authApi = new AuthApi();

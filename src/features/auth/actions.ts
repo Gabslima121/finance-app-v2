@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ApiError } from '@/lib/api/client';
 import { authApi } from './api';
 import { safeNextPath } from './safe-next-path';
+import { SESSION_COOKIE_OPTIONS } from './session-cookies';
 import { loginInputSchema, type LoginInput } from './schemas';
 
 export type LoginState =
@@ -54,17 +55,10 @@ export async function loginAction(
     return { status: 'error', message, values: { email: values.email } };
   }
 
-  // Os cookies da API são do domínio dela; o site grava os seus, com as
-  // mesmas garantias. Path "/" para o servidor do Next ler em qualquer rota.
+  // Os cookies da API são do domínio dela; o site grava os seus.
   const cookieStore = await cookies();
   for (const { name, value, expires } of sessionCookies) {
-    cookieStore.set(name, value, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      expires,
-    });
+    cookieStore.set(name, value, { ...SESSION_COOKIE_OPTIONS, expires });
   }
 
   // O campo vem do navegador: só caminho interno passa (anti open redirect).

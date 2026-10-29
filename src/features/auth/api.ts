@@ -14,6 +14,16 @@ class AuthApi {
     });
     return parseSessionCookies(response.headers.getSetCookie());
   }
+
+  // Troca o refresh token por um par novo (a API revoga o antigo).
+  // Refresh inválido, expirado ou já usado: ApiError 401.
+  async refresh(refreshToken: string): Promise<SessionCookie[]> {
+    const response = await apiRequest('/auth/refresh', {
+      method: 'POST',
+      headers: { Cookie: `refresh_token=${refreshToken}` },
+    });
+    return parseSessionCookies(response.headers.getSetCookie());
+  }
 }
 
 export const authApi = new AuthApi();

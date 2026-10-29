@@ -1,4 +1,6 @@
 import 'server-only';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { env } from '@/lib/env';
 
 export class ApiError extends Error {
@@ -32,10 +34,25 @@ export async function apiRequest(
 
 // Cliente HTTP da API, usado em Server Components e Server Actions.
 // O tipo da resposta vem de quem chama: apiFetch<MinhaResposta>('/rota').
+// Repassa o access token do cookie do site; o proxy já o renovou se precisava.
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await apiRequest(path, init);
-  return (await response.json().catch(() => null)) as T;
+  const accessToken = (await cookies()).get('access_token')?.value;
+
+  try {
+    const response = await apiRequest(path, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+    });
+    return (await response.json().catch(() => null)) as T;
+  } catch (error) {
+    // 401 mesmo depois do proxy: sessão revogada no servidor. Volta ao login.
+    if (error instanceof ApiError && error.status === 401) redirect('/login');
+    throw error;
+  }
 }

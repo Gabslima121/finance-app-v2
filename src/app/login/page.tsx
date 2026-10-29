@@ -5,9 +5,9 @@ export const metadata: Metadata = { title: 'Entrar · Finanças' };
 
 export default function LoginPage() {
   return (
-    <section className="mx-auto max-w-sm space-y-6 pt-8">
+    <main className="mx-auto max-w-sm space-y-6 px-4 pt-16">
       <h1 className="text-2xl font-bold">Entrar</h1>
       <LoginForm />
-    </section>
+    </main>
   );
 }

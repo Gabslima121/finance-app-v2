@@ -7,6 +7,7 @@ import { logoutAction } from '@/features/auth';
 const ITEMS = [
   { href: '/', label: 'Início' },
   { href: '/status', label: 'Status' },
+  { href: '/tokens', label: 'Tokens' },
 ] as const;
 
 // Celular: barra fixa embaixo. Telas médias em diante: menu lateral.
